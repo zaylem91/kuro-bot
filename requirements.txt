@@ -1,0 +1,13 @@
+hikari==2.6.0
+hikari-lightbulb==3.2.6
+hikari-miru==4.3.1
+aiogoogle==5.19.0
+asyncpg==0.31.0
+python-dotenv==1.2.3
+aiohttp==3.14.3
+attrs==26.1.0
+sentry-sdk==2.68.1
+tzdata==2025.2
+pytest==9.1.1
+pytest-asyncio==1.4.0
+uvloop>=0.22.1; sys_platform != "win32"

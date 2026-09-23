@@ -1,0 +1,57 @@
+services:
+  db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme_db_pass}
+      POSTGRES_DB: ${POSTGRES_DB:-manga_db}
+    ports:
+      # Publish DB only if you need external access (pgAdmin, backups).
+      # For hosting, safer to keep it internal — comment the line below.
+      - "127.0.0.1:5432:5432"
+    volumes:
+      # PostgreSQL 18+ official image uses /var/lib/postgresql for data storage
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-postgres} -d $${POSTGRES_DB:-manga_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  bot:
+    build: .
+    init: true
+    stop_grace_period: 15s
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-changeme_db_pass}@db:5432/${POSTGRES_DB:-manga_db}
+      # SECURITY: Override via .env using DATABASE_URL or POSTGRES_* vars
+      # Health server must bind 0.0.0.0 inside the container (Docker networking).
+      HEALTH_HOST: 0.0.0.0
+      HEALTH_PORT: ${HEALTH_PORT:-8080}
+    ports:
+      # Bot health/metrics endpoint for hosting monitors (Uptime Kuma, etc.).
+      # Host port follows HEALTH_PORT so both sides stay in sync.
+      - "127.0.0.1:${HEALTH_PORT:-8080}:${HEALTH_PORT:-8080}"
+    volumes:
+      - ./bot/Service Account.json:/app/bot/Service Account.json:ro
+      - ./backups:/app/backups
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  pgdata:

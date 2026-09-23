@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer">
+<title>Kuro — Remote Dashboard</title>
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;600;700&display=swap">
+<link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;600;700&display=swap" rel="stylesheet"></noscript>
+<link rel="stylesheet" href="style.css?v=2.6">
+</head>
+<body>
+
+<!-- ═══════════════ LOGIN PAGE ═══════════════ -->
+<div id="loginWrap">
+  <div class="login-card">
+    <div class="login-logo"><img src="favicon.ico" alt="Kuro" class="brand-avatar"><span>Kuro</span> Dashboard</div>
+    <p class="login-sub muted" data-i="loginSub">Full bot control from anywhere — token-encrypted connection</p>
+    <div id="loginMsg"></div>
+    <div class="warnbox" id="httpWarn" style="display:none">⚠️ <span data-i="httpWarn">Connection is NOT encrypted (HTTP). Use HTTPS or VPN — token may be intercepted on public networks.</span></div>
+    <div class="login-fields">
+      <div class="field">
+        <label data-i="tokL">Dashboard Token (DASHBOARD_TOKEN)</label>
+        <div style="position:relative">
+           <input id="tokInput" dir="ltr" type="password" placeholder="••••••••" autocomplete="off" style="width:100%; padding-inline-end:40px;">
+           <button id="toggleTokBtn" style="position:absolute; inset-inline-end:10px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--muted); cursor:pointer; font-size:16px; padding:4px;" title="Show/Hide">👁️</button>
+        </div>
+      </div>
+      <button id="loginBtn" data-i="login">🔓 Secure Login</button>
+    </div>
+    <p class="login-hint muted" data-i="loginHint">Token is stored in your browser only and sent via encrypted header.<br>5 wrong attempts = 10 min IP ban.</p>
+  </div>
+</div>
+
+<!-- ═══════════════ APP SHELL ═══════════════ -->
+<div id="appWrap" class="hidden">
+
+  <!-- Sidebar Overlay (mobile) -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- Sidebar Navigation -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo"><img src="favicon.ico" alt="Kuro" class="brand-avatar-sm"><span>Kuro</span></div>
+      <button class="sidebar-toggle" id="sidebarToggle">✕</button>
+    </div>
+    <nav class="sidebar-nav" id="tabs">
+      <button data-tab="overview" class="active"><span class="nav-icon">📊</span><span class="nav-label" data-i="tOver">Overview</span></button>
+      <button data-tab="mangas"><span class="nav-icon">📚</span><span class="nav-label" data-i="tMangas">Mangas</span></button>
+      <button data-tab="chapters"><span class="nav-icon">📄</span><span class="nav-label" data-i="tCh">Chapters</span></button>
+      <button data-tab="staff"><span class="nav-icon">👥</span><span class="nav-label" data-i="tStaff">Staff</span></button>
+      <button data-tab="finance"><span class="nav-icon">💰</span><span class="nav-label" data-i="tFin">Finance</span></button>
+      <button data-tab="jobs"><span class="nav-icon">⚙️</span><span class="nav-label" data-i="tJobs">Jobs</span></button>
+      <button data-tab="database"><span class="nav-icon">🗄️</span><span class="nav-label" data-i="tDb">Database</span></button>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="badge" id="connBadge">● <span data-i="online">Online</span></div>
+    </div>
+  </aside>
+
+  <!-- Main Content Area -->
+  <div class="main-area">
+    <header class="topbar">
+      <button class="topbar-menu" id="menuBtn">☰</button>
+      <div class="topbar-title" id="pageTitle">📊 Overview</div>
+      <div class="topbar-actions">
+        <button class="btn-icon" id="langBtn">EN</button>
+        <button class="btn-icon" id="refreshBtn" title="Refresh">⟳</button>
+        <button class="btn-icon" id="shareBtn" title="Temporary View Link">🔗 Share</button>
+        <button class="btn-icon btn-logout" id="logoutBtn" data-i="logout">Logout</button>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- ══════ OVERVIEW TAB ══════ -->
+      <section id="tab-overview" class="fade-in">
+        <div class="stat-grid" id="statGrid"></div>
+        <div class="card">
+          <h3 data-i="recentAct">🕘 Recent Activity</h3>
+          <div class="activity-timeline" id="recentAct"></div>
+        </div>
+      </section>
+
+      <!-- ══════ MANGAS TAB ══════ -->
+      <section id="tab-mangas" class="hidden">
+        <div class="toolbar">
+          <input id="mangaSearch" data-ph="searchManga" placeholder="Search manga title...">
+          <select id="mangaStatusF"><option value="" data-i="all">All</option>
+            <option value="ongoing">🕒 ongoing</option><option value="paused">⏸️ paused</option>
+            <option value="dropped">🛑 dropped</option></select>
+          <button id="mangaSearchBtn" data-i="search">Search</button>
+          <button class="btn-green" id="addMangaBtn" data-i="addManga">+ Add Manga</button>
+        </div>
+        <div id="mangaRows" class="manga-grid" style="margin-bottom:8px"></div>
+        <div class="pagination" id="pageMangas"></div>
+      </section>
+
+      <!-- BULK ACTIONS TOOLBAR -->
+      <div id="bulkToolbar" class="bulk-toolbar hidden">
+        <span id="bulkCount" class="bulk-count">0 selected</span>
+        <div id="bulkActions" class="bulk-actions"></div>
+        <button class="btn-ghost" data-act="bulkClose" style="padding:4px 8px;font-size:12px;border-radius:var(--radius-sm)">✕</button>
+      </div>
+
+      <!-- 📄 CHAPTERS TAB 📄 -->
+      <section id="tab-chapters" class="hidden">
+        <div class="toolbar">
+          <input id="chSearch" placeholder="Search chapter or manga..." data-ph="searchCh" style="max-width:200px">
+          <button id="chSearchBtn" data-i="search">Search</button>
+        </div>
+        <div id="chRows" class="manga-grid" style="margin-bottom:8px"></div>
+        <div class="pagination" id="pageChapters"></div>
+      </section>
+
+      <!-- ══════ STAFF TAB ══════ -->
+      <section id="tab-staff" class="hidden">
+        <div class="stat-grid" id="staffGrid" style="margin-bottom:20px"></div>
+        <div class="toolbar" style="flex-wrap:wrap; gap:10px;">
+          <input id="staffSearch" dir="ltr" placeholder="Search by name or Discord ID..." data-ph="searchStaff" style="min-width:220px; flex:1;">
+          <select id="staffRoleF">
+            <option value="" data-i="allRoles">All Roles</option>
+            <option value="TL">TL</option>
+            <option value="PR">PR</option>
+            <option value="ED">ED</option>
+          </select>
+          <select id="staffWorkloadF">
+            <option value="" data-i="allWorkload">All Statuses</option>
+            <option value="active" data-i="wlActive">🟢 Active</option>
+            <option value="idle" data-i="wlIdle">⚪ Available</option>
+            <option value="overloaded" data-i="wlOverloaded">🔴 Busy (3+)</option>
+          </select>
+          <select id="staffPayF">
+            <option value="" data-i="allPayment">All Balances</option>
+            <option value="unpaid" data-i="hasUnpaid">Unpaid (> $0)</option>
+            <option value="zero" data-i="zeroUnpaid">Zero Balance ($0)</option>
+          </select>
+          <button id="staffSearchBtn" data-i="search">Search</button>
+        </div>
+        <div class="card table-wrap"><table>
+          <thead><tr>
+            <th class="sortable" data-act="sortCol" data-sort="username" data-i="cUser" style="cursor:pointer">User</th>
+            <th data-i="cRoles">Roles</th>
+            <th class="sortable" data-act="sortCol" data-sort="active_mangas" data-i="cMangas" style="cursor:pointer">Mangas</th>
+            <th class="sortable" data-act="sortCol" data-sort="claimed_chapters" data-i="cClaimed" style="cursor:pointer">Claimed</th>
+            <th class="sortable" data-act="sortCol" data-sort="unpaid_cents" data-i="cUnpaid" style="cursor:pointer">Unpaid</th>
+            <th data-i="cAct">Actions</th>
+          </tr></thead>
+          <tbody id="staffRows"></tbody></table></div>
+      </section>
+
+      <!-- ══════ FINANCE TAB ══════ -->
+      <section id="tab-finance" class="hidden">
+        <div class="stat-grid" id="finGrid"></div>
+        <div class="card">
+          <div class="row" style="justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <h3 data-i="topBal" style="margin:0">💳 Top Unpaid Balances</h3>
+            <button id="btnExportLedger" class="btn-ghost" style="padding:6px 14px; font-size:13px" data-i="exportCsv">📥 Export Ledger (CSV)</button>
+          </div>
+          <div class="table-wrap"><table><thead><tr><th data-i="cUser">User</th>
+          <th data-i="cCh">Chapters</th><th data-i="cAmount">Amount</th><th></th></tr></thead>
+          <tbody id="topBalRows"></tbody></table></div></div>
+        <div class="card">
+          <h3 data-i="pricing">⚙️ Page Rates (in cents)</h3>
+          <div class="row" id="priceRow" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:16px;"></div>
+          <div class="row" style="margin-top:20px; justify-content:flex-end">
+            <button id="btnSavePricing" class="btn-green" style="padding:10px 24px" data-i="save">💾 Save Changes</button>
+          </div>
+        </div>
+        <div class="card">
+          <h3 data-i="recentPay">🧾 Recent Payouts</h3>
+          <div class="activity-timeline" id="recentPay"></div></div>
+      </section>
+
+      <!-- ══════ JOBS TAB ══════ -->
+      <section id="tab-jobs" class="hidden">
+        <div class="card">
+          <h3 data-i="tJobs">⚙️ Jobs</h3>
+          <div class="toolbar" style="margin-bottom:20px; display:flex; justify-content:space-between; align-items:center;">
+             <div class="row" style="gap:12px;">
+                <select id="jobStatusF"><option value="" data-i="all">All</option>
+                  <option value="pending" data-i="jobPending">Pending</option><option value="running" data-i="jobRunning">Running</option>
+                  <option value="done" data-i="jobDone">Done</option><option value="failed" data-i="jobFailed">Failed</option></select>
+                <button id="jobSearchBtn" class="btn-green" data-i="refresh">⟳ Refresh</button>
+             </div>
+             <div id="jobCounts" class="row" style="gap:16px; background:var(--bg); padding:8px 16px; border-radius:var(--radius-sm); border:1px solid var(--border)"></div>
+          </div>
+          <div class="table-wrap"><table><thead><tr>
+          <th data-i="cID">ID</th><th data-i="cJobType">Type</th>
+          <th data-i="cJobPayload">Details</th><th data-i="cStatus">Status</th>
+          <th data-i="cJobAtt">Attempts</th><th data-i="cJobCreated">Created At</th></tr></thead>
+          <tbody id="jobRows"></tbody></table></div></div>
+      </section>
+
+      <!-- ══════ DATABASE TAB ══════ -->
+      <section id="tab-database" class="hidden">
+        <div class="stat-grid" id="dbGrid" style="margin-bottom:20px"></div>
+        <div class="card">
+          <div class="row" style="justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:12px;">
+            <h3 data-i="tDb" style="margin:0">🗄️ Database & Backups</h3>
+            <div class="row" style="gap:10px;">
+              <button id="btnRefreshDb" class="btn-ghost" style="padding:6px 14px; font-size:13px" data-i="refresh">⟳ Refresh</button>
+              <button id="btnUploadBackup" class="btn-ghost" style="padding:6px 14px; font-size:13px" data-i="btnUploadBackup">📤 Upload Backup</button>
+              <input type="file" id="inputBackupUpload" accept=".sql" style="display:none">
+              <button id="btnCreateBackup" class="btn-green" style="padding:6px 14px; font-size:13px" data-i="btnCreateBackup">⚡ Create Backup</button>
+            </div>
+          </div>
+          <div class="table-wrap"><table><thead><tr>
+            <th data-i="cFileName">File Name</th>
+            <th data-i="cJobCreated">Created At</th>
+            <th data-i="cSize">Size</th>
+            <th data-i="cAct" style="text-align:end">Actions</th>
+          </tr></thead>
+          <tbody id="dbBackupRows"></tbody></table></div>
+        </div>
+      </section>
+
+    </div><!-- .content -->
+
+    <footer data-i="footerText">Scanlation Internal Management System</footer>
+  </div><!-- .main-area -->
+</div><!-- #appWrap -->
+
+<!-- Toast Notifications -->
+<div id="toastContainer"></div>
+
+<!-- Modal -->
+<div id="modalWrap" class="hidden"><div class="modal-bg"><div class="modal" id="modalBox"></div></div></div>
+
+<script src="locales/ar.js?v=2.6"></script>
+<script src="locales/en.js?v=2.6"></script>
+<script src="locales/fr.js?v=2.6"></script>
+<script src="locales/es.js?v=2.6"></script>
+<script src="locales/ru.js?v=2.6"></script>
+<script src="app.js?v=2.6" defer></script>
+</body>
+</html>

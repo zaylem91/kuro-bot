@@ -1,0 +1,99 @@
+# Secrets - NEVER COMMIT
+.env
+bot/.env
+bot/Service Account.json
+Service Account.json
+*Service Account*.json
+**/*Service Account*.json
+.env.local
+.env.production
+.env.development
+!.env.example
+# Archives that may contain secrets
+*.zip
+*.rar
+*.7z
+
+# Service Account & Credentials (extra safety)
+*.pem
+*.key
+credentials.json
+token.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.pyd
+venv/
+.venv/
+env/
+.venv*/
+ENV/
+.venv_*/
+*.egg-info/
+.eggs/
+dist/
+build/
+*.wheel
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Testing & Coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.hypothesis/
+.pytest_*.cache/
+nosetests.xml
+coverage.xml
+*.cover
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+*.code-workspace
+.spyderproject
+.spyproject
+.ropeproject
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Logs
+*.log
+logs/
+bot.log
+npm-debug.log*
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+dump.rdb
+
+# Temporary files
+*.tmp
+*.temp
+tmp/
+temp/
+
+# Node (if any frontend)
+node_modules/

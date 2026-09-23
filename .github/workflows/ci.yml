@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: ci_test_db
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: ci_test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Compile check
+        run: python -m compileall -q bot/
+      - name: Schema check & Migration
+        env:
+          DATABASE_URL: postgresql://ci_test_db:test@localhost:5432/ci_test_db
+        run: python -c "import asyncio, os; from bot.database.connection import init_db, close_db; r = asyncio.Runner(); r.run(init_db(os.environ['DATABASE_URL'])); r.run(close_db()); r.close()"
+      - name: Run test suite
+        env:
+          DISCORD_TOKEN: dummy_token_for_ci
+          TEAM_LEADER_ROLE_ID: "100"
+          ADMIN_ROLE_ID: "200"
+          DATABASE_URL: postgresql://ci_test_db:test@localhost:5432/ci_test_db
+          GUILD_ID: "123456789012345678"
+          DASHBOARD_TOKEN: "secret_test_token_123"
+        run: python -m pytest -v

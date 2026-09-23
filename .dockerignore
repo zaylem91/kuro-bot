@@ -1,0 +1,39 @@
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Python cache & compiled bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg-info/
+dist/
+build/
+
+# Version control & configuration
+.git/
+.gitignore
+.github/
+.idea/
+.vscode/
+
+# Secrets & local environment (never bake credentials into images)
+.env
+.env.*
+!.env.example
+bot/.env
+**/.env
+bot/Service Account.json
+*.pem
+*.key
+
+# Backups, logs & temporary files
+backups/
+*.log
+*.tmp
+*.temp
+media_*.png
